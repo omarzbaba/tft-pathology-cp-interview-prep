@@ -47,6 +47,8 @@
     spark: 'M12 3l1.9 5.6L19 10l-5.1 1.4L12 17l-1.9-5.6L5 10l5.1-1.4L12 3z',
     grad: 'M22 10L12 5 2 10l10 5 10-5zM6 12v5c0 1 2.7 3 6 3s6-2 6-3v-5',
     doc: 'M14 3v5h5M14 3l5 5v11a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2h7z',
+    close: 'M18 6 6 18M6 6l12 12',
+    play: 'M6 4l14 8-14 8V4z',
   };
   const svg = (name, w = 18) => `<svg viewBox="0 0 24 24" width="${w}" height="${w}" fill="${name === "starF" ? "currentColor" : "none"}" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="${I[name] || ""}"/></svg>`;
 
@@ -196,6 +198,7 @@
     app.innerHTML = shellHTML();
     wireShell();
     route();
+    if (!store.get("welcomed", 0)) setTimeout(() => { if (!$("#deck")) openDeck(buildTour(), { title: "Guided walkthrough", onClose: () => store.set("welcomed", 1) }); }, 450);
   }
 
   function wireShell() {
@@ -279,6 +282,10 @@
         <div class="eyebrow">${svg("grad", 14)} Interview Command Center</div>
         <h1>Clinical Pathology, Core Lab Management &amp; Pathology Informatics.</h1>
         <p class="lede">A serious, private study system for the Clinical Pathologist phone interview at Lahey Hospital &amp; Medical Center / Beth Israel Lahey Health — built to make you sound clinically grounded, operationally sharp, and genuinely hireable.</p>
+        <div class="btn-row" style="margin-top:1.6rem;position:relative;z-index:1">
+          <button class="btn primary" data-action="tour">${svg("play", 15)} Begin the guided walkthrough</button>
+          <a class="btn" href="#/chapters">Browse on your own ${svg("chev", 15)}</a>
+        </div>
         <div class="stat-row">
           <div class="stat"><b>${c.chapters}</b><span>Core chapters</span></div>
           <div class="stat"><b>${c.subtopics}</b><span>Teaching topics</span></div>
@@ -428,6 +435,7 @@
           <span class="caret">${svg("chev", 16)}</span>
         </button>
         <div class="st-body" hidden>
+          <button class="btn" data-action="deckSub" data-id="${s.id}" style="margin-bottom:1rem">${svg("play", 14)} Study this topic as slides</button>
           <div class="layers">${tabs}</div>
           ${panels}
           <div class="btn-row" style="margin-top:1rem;border-top:1px solid var(--line);padding-top:1rem">
@@ -446,6 +454,10 @@
           <h1 class="display" style="font-size:var(--step-3)">${esc(c.title)}</h1>
           <div class="ch-meta" style="margin-top:.5rem">${c.tags.map((t) => `<span class="tag ${t === "Lahey-specific" ? "claret" : ""}">${esc(t)}</span>`).join("")}</div>
         </div>
+      </div>
+      <div class="btn-row" style="margin:0 0 1.4rem">
+        <button class="btn primary" data-action="deckChapter" data-id="${c.id}">${svg("play", 15)} Walk me through this chapter, slide by slide</button>
+        <span class="muted" style="font-size:.82rem">or read it in full below</span>
       </div>
       ${c.introHtml ? `<div class="prose" style="margin-bottom:1.6rem">${c.introHtml}</div>` : ""}
       ${subs}
@@ -867,6 +879,9 @@
     else if (act === "flip") { flash.flipped = !flash.flipped; $(".flash").classList.toggle("flipped", flash.flipped); }
     else if (act === "flNext") { const cards = D.selfTest.cards; if (flash.idx < cards.length - 1) { flash.idx++; flash.flipped = false; renderFlash(); } }
     else if (act === "flPrev") { if (flash.idx > 0) { flash.idx--; flash.flipped = false; renderFlash(); } }
+    else if (act === "tour") openDeck(buildTour(), { title: "Guided walkthrough", onClose: () => store.set("welcomed", 1) });
+    else if (act === "deckChapter") { const ch = D.chapters.find((x) => x.id === id); if (ch) openDeck(buildChapterDeck(ch), { title: ch.title }); }
+    else if (act === "deckSub") { const ch = D.chapters.find((x) => x.id === id.split("-s")[0]); const sub = ch && ch.subtopics.find((x) => x.id === id); if (ch && sub) openDeck(buildSubtopicDeck(sub, ch), { title: ch.title }); }
   });
   // project 30/2 toggle, rapid/self accordions, glossary filter (delegated separately)
   document.addEventListener("click", (e) => {
@@ -887,6 +902,133 @@
     if (e.key === "Escape") { const box = $("#searchResults"); if (box) box.hidden = true; }
     if (parseHash().route === "phone") { if (e.key === "ArrowRight") phoneAction("phNext"); if (e.key === "ArrowLeft") phoneAction("phPrev"); if (e.key === " " && !phone.revealed) { e.preventDefault(); phoneAction("phReveal"); } }
   });
+
+  /* =======================================================================
+     GUIDED SLIDE DECK — chunks content into one-idea-at-a-time slides
+     ======================================================================= */
+  function firstSentence(t) { t = (t || "").trim(); const m = t.match(/^.*?[.!?](\s|$)/); return (m ? m[0] : t).trim(); }
+  function htmlBlocks(html) {
+    const d = document.createElement("div"); d.innerHTML = html || "";
+    const out = [];
+    d.childNodes.forEach((n) => { if (n.nodeType === 1 && n.outerHTML.trim()) out.push(n.outerHTML); else if (n.nodeType === 3 && n.textContent.trim()) out.push("<p>" + esc(n.textContent.trim()) + "</p>"); });
+    return out.length ? out : (html ? [html] : []);
+  }
+  const DECK_PLAN = [
+    { key: "plain", kicker: "In plain English", kind: "plain" },
+    { key: "whyMatters", kicker: "Why it matters", kind: "why" },
+    { key: "advanced", kicker: "Going a level deeper", kind: "neutral" },
+    { key: "__rel", kicker: "Where it shows up", kind: "plain" },
+    { key: "examples", kicker: "In the real lab", kind: "example" },
+    { key: "scenario", kicker: "Picture this", kind: "example" },
+    { key: "talkingPoint", kicker: "Say it like this", kind: "answer" },
+    { key: "strongAnswer", kicker: "A strong answer", kind: "answer", whole: true },
+    { key: "shortAnswer", kicker: "The short version", kind: "answer", whole: true },
+    { key: "followUps", kicker: "They might follow up with", kind: "neutral" },
+    { key: "pitfalls", kicker: "Careful — avoid this", kind: "pitfall" },
+    { key: "sayNotThat", kicker: "Say this, not that", kind: "claret" },
+    { key: "lahey", kicker: "At Lahey / BILH", kind: "claret" },
+  ];
+  function subtopicSlides(sub, chapter, tIdx, tTotal) {
+    const slides = [];
+    const hook = firstSentence(ft(sub.fields, "canonical") || ft(sub.fields, "plain"));
+    slides.push({ kind: "section", title: sub.title, subtitle: hook, chapter: chapter.title, tIdx, tTotal });
+    DECK_PLAN.forEach((pl) => {
+      if (pl.key === "__rel") {
+        const parts = [["relCP", "Clinical pathology"], ["relMgmt", "Core lab management"], ["relInf", "Pathology informatics"]].filter((p) => fh(sub.fields, p[0]));
+        if (!parts.length) return;
+        const html = parts.map((p) => `<div class="deck-mini"><span class="ml">${p[1]}</span>${fh(sub.fields, p[0])}</div>`).join("");
+        slides.push({ kind: pl.kind, kicker: pl.kicker, html, tIdx, tTotal });
+        return;
+      }
+      const html = fh(sub.fields, pl.key); if (!html) return;
+      if (pl.whole) { slides.push({ kind: pl.kind, kicker: pl.kicker, html, answer: pl.kind === "answer", tIdx, tTotal }); return; }
+      htmlBlocks(html).forEach((b, bi) => slides.push({ kind: pl.kind, kicker: bi === 0 ? pl.kicker : pl.kicker + " — cont.", html: b, answer: pl.kind === "answer", tIdx, tTotal }));
+    });
+    return slides;
+  }
+  function buildChapterDeck(ch) {
+    const subs = ch.subtopics.filter((s) => s.templated);
+    const slides = [{ kind: "cover", title: ch.title, letter: ch.letter, subtitle: `${subs.length} topics · we'll take them one slide at a time`, tags: ch.tags }];
+    subs.forEach((s, i) => slides.push(...subtopicSlides(s, ch, i + 1, subs.length)));
+    slides.push({ kind: "cta", title: "That's the chapter.", html: `<p>You just walked through <strong>${esc(ch.title)}</strong> — one idea at a time. Want to lock it in?</p>`, actions: [{ label: "Rehearse in Phone Screen", route: "#/phone" }, { label: "Back to chapters", route: "#/chapters" }] });
+    return slides;
+  }
+  function buildSubtopicDeck(sub, ch) {
+    return subtopicSlides(sub, ch, 1, 1).concat([{ kind: "cta", title: "Nicely done.", html: `<p>That's <strong>${esc(sub.title)}</strong> in bite-size pieces.</p>`, actions: [{ label: "Back to the chapter", route: "#/chapter/" + ch.id }, { label: "Rehearse phone questions", route: "#/phone" }] }]);
+  }
+  function buildTour() {
+    const themes = [
+      "Broad CP competence — comfortable across the whole menu, not siloed in one bench.",
+      "Core lab management realism — staffing, TAT, QC, vendors, and calm under disruption.",
+      "Informatics fluency — LIS, middleware, interfaces, autoverification, standards.",
+      "Multi-site integration — harmonizing menus and ranges as BILH grows.",
+      "Patient-safety instinct — every answer lands back on the patient at the end of the tube.",
+      "Leadership through influence — moving techs, IT, and clinicians without title authority.",
+    ];
+    const wanted = ["autoverification", "delta", "loinc", "harmoniz", "critical value", "turnaround", "middleware", "interface"];
+    const picks = (D.plainEnglish || []).filter((p) => wanted.some((w) => (p.term + " " + (p.subtitle || "")).toLowerCase().includes(w))).slice(0, 6);
+    const s = [];
+    s.push({ kind: "cover", title: "Welcome, Tala.", letter: "Ψ", subtitle: "A calm, guided walk through what you need for the Lahey clinical-pathology phone screen — one idea at a time. Use the arrows, and step out whenever you like." });
+    s.push({ kind: "plain", kicker: "How this works", html: `<p>You don't have to read this like a book. Let it walk you through, slide by slide. Press <strong>→</strong> to continue, <strong>←</strong> to go back, and <strong>Esc</strong> to jump into the full app any time.</p>` });
+    s.push({ kind: "why", kicker: "The role in one line", html: `<p>A <strong>broad clinical pathologist</strong> at Lahey / Beth Israel Lahey Health — with real weight in <strong>core lab management</strong> and <strong>informatics</strong>, inside a growing system that's integrating hospital labs.</p>` });
+    s.push({ kind: "why", kicker: "What they're really testing", html: `<ul>${themes.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>` });
+    picks.forEach((p) => s.push({ kind: "example", kicker: p.term, html: (p.analogy || p.plain || "") + (p.sayOutLoud ? `<div class="deck-mini"><span class="ml">Say it like this</span>${p.sayOutLoud}</div>` : "") }));
+    s.push({ kind: "answer", kicker: "The through-line", html: `<p>Land every answer back on the same runway: <strong>patient care, lab quality, operational reliability, and collaboration.</strong> Practical beats abstract, every time.</p>` });
+    s.push({ kind: "cta", title: "Where do you want to start?", html: `<p>Pick one below — or reopen this walkthrough any time from the home page.</p>`, actions: [{ label: "Browse the chapters", route: "#/chapters" }, { label: "Rehearse phone questions", route: "#/phone" }, { label: "60-minute cram", route: "#/cram" }] });
+    return s;
+  }
+  function slideHTML(s) {
+    if (s.kind === "cover") return `<div class="slide" style="text-align:center;display:flex;flex-direction:column;align-items:center"><div class="cover-mark">${esc(s.letter || "Ψ")}</div><h2 class="section-title">${esc(s.title)}</h2>${s.subtitle ? `<p class="section-sub" style="text-align:center">${esc(s.subtitle)}</p>` : ""}${s.tags ? `<div class="ch-meta" style="margin-top:1.2rem;justify-content:center">${s.tags.map((t) => `<span class="tag ${t === "Lahey-specific" ? "claret" : ""}">${esc(t)}</span>`).join("")}</div>` : ""}</div>`;
+    if (s.kind === "section") return `<div class="slide"><div class="section-eyebrow">${esc(s.chapter || "")}${s.tTotal > 1 ? ` · Topic ${s.tIdx} of ${s.tTotal}` : ""}</div><h2 class="section-title">${esc(s.title)}</h2>${s.subtitle ? `<p class="section-sub">${esc(s.subtitle)}</p>` : ""}</div>`;
+    if (s.kind === "cta") return `<div class="slide"><span class="slide-kicker k-why">${svg("spark", 12)} You've got this</span><h2 class="section-title" style="font-size:clamp(1.6rem,1.2rem+1.8vw,2.5rem)">${esc(s.title)}</h2><div class="slide-body" style="margin-top:1rem">${s.html}</div><div class="deck-cta">${s.actions.map((a) => `<a class="btn primary" data-deck-go="${a.route}">${esc(a.label)}</a>`).join("")}</div></div>`;
+    const kc = "k-" + (s.kind === "plainmsg" ? "plain" : s.kind);
+    return `<div class="slide"><span class="slide-kicker ${kc}">${esc(s.kicker || "")}</span><div class="slide-body ${s.answer ? "answer" : ""}">${s.html}</div></div>`;
+  }
+  function openDeck(slides, opts) {
+    opts = opts || {};
+    if (!slides || !slides.length) return;
+    if ($("#deck")) $("#deck").remove();
+    let i = 0;
+    const host = document.createElement("div"); host.className = "deck"; host.id = "deck";
+    host.setAttribute("role", "dialog"); host.setAttribute("aria-label", "Guided walkthrough");
+    host.innerHTML = `
+      <div class="deck-top">
+        <div class="deck-brand"><span class="mark">Ψ</span><span>${esc(opts.title || "Guided walkthrough")}</span></div>
+        <div class="spacer"></div>
+        <span class="deck-pos" id="deckPos"></span>
+        <button class="icon-btn" id="deckClose" aria-label="Close walkthrough">${svg("close")}</button>
+      </div>
+      <div class="deck-progress"><span id="deckFill"></span></div>
+      <div class="deck-stage" id="deckStage"></div>
+      <div class="deck-nav">
+        <button class="btn" id="deckPrev">${svg("arrowL", 15)} Back</button>
+        <div class="deck-dots" id="deckDots"></div>
+        <button class="btn primary" id="deckNext">Next ${svg("chev", 15)}</button>
+      </div>`;
+    document.body.appendChild(host);
+    document.body.style.overflow = "hidden";
+    const stage = host.querySelector("#deckStage");
+    const render = () => {
+      const s = slides[i];
+      stage.innerHTML = slideHTML(s);
+      stage.scrollTop = 0;
+      host.querySelector("#deckFill").style.width = ((i + 1) / slides.length * 100) + "%";
+      host.querySelector("#deckPos").textContent = (s.tTotal > 1 && s.tIdx ? `Topic ${s.tIdx}/${s.tTotal} · ` : "") + `${i + 1} / ${slides.length}`;
+      host.querySelector("#deckPrev").disabled = i === 0;
+      host.querySelector("#deckNext").innerHTML = i === slides.length - 1 ? "Finish" : `Next ${svg("chev", 15)}`;
+      const dots = host.querySelector("#deckDots");
+      dots.innerHTML = slides.length <= 24 ? slides.map((_, k) => `<i class="${k < i ? "done" : ""} ${k === i ? "cur" : ""}"></i>`).join("") : "";
+    };
+    const close = () => { document.body.style.overflow = ""; host.remove(); document.removeEventListener("keydown", key); if (opts.onClose) opts.onClose(); };
+    const go = (d) => { const n = i + d; if (n < 0) return; if (n >= slides.length) { close(); return; } i = n; render(); };
+    const key = (e) => { if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); go(1); } else if (e.key === "ArrowLeft") { go(-1); } else if (e.key === "Escape") { close(); } };
+    host.querySelector("#deckNext").addEventListener("click", () => go(1));
+    host.querySelector("#deckPrev").addEventListener("click", () => go(-1));
+    host.querySelector("#deckClose").addEventListener("click", close);
+    host.addEventListener("click", (e) => { const g = e.target.closest("[data-deck-go]"); if (g) { e.preventDefault(); const r = g.getAttribute("data-deck-go"); close(); location.hash = r; } });
+    document.addEventListener("keydown", key);
+    render();
+  }
 
   /* =======================================================================
      BOOT

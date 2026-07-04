@@ -20,6 +20,8 @@ You've got this. 💪
 
 The corpus is also a **live interactive study app** — an "Interview Command Center" with a home dashboard, the Lahey role lens, an interactive field map, the chapters library with layered topic views (plain-English → deeper → examples → interview → pitfalls), the 30-project bank, the 44-question interview bank, a **Phone Screen Mode** (timed sequential rehearsal with confidence tracking), rapid review, glossary, and flashcards. Global search, tag filters, familiarity progress, and light/dark themes are built in.
 
+**Guided walkthrough (slide mode).** So the depth never overwhelms, the app opens with a calm, one-idea-at-a-time **guided walkthrough** (it auto-plays on first visit and can be replayed from the home page). Every chapter and every topic also offers a "walk me through this, slide by slide" mode — the same full content, chunked across bite-size slides with arrow-key navigation — sitting alongside the deep read view.
+
 - **Open it:** **https://omarzbaba.github.io/tft-pathology-cp-interview-prep/**
 - **Access code:** `TFT` (case-insensitive) — you'll enter it once.
 - **Offline / local:** the whole app is a single self-contained `index.html` — you can also just open that file in any browser.
