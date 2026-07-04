@@ -16,6 +16,20 @@ You've got this. 💪
 
 ---
 
+## 🖥️ The study dashboard (start here)
+
+The corpus is also a **live interactive study app** — an "Interview Command Center" with a home dashboard, the Lahey role lens, an interactive field map, the chapters library with layered topic views (plain-English → deeper → examples → interview → pitfalls), the 30-project bank, the 44-question interview bank, a **Phone Screen Mode** (timed sequential rehearsal with confidence tracking), rapid review, glossary, and flashcards. Global search, tag filters, familiarity progress, and light/dark themes are built in.
+
+- **Open it:** **https://omarzbaba.github.io/tft-pathology-cp-interview-prep/**
+- **Access code:** `TFT` (case-insensitive) — you'll enter it once.
+- **Offline / local:** the whole app is a single self-contained `index.html` — you can also just open that file in any browser.
+
+> Note on the access code: because the repository is public, the code is a friendly gate, not real security — the content is publicly viewable in the repo. It simply gives a clean, private-feeling entry point.
+
+**Rebuild the app** after editing content: `node dashboard/build.mjs` (regenerates `index.html` from the markdown in `content/`).
+
+---
+
 ## What this is
 
 A premium, richly-detailed interview-preparation and learning corpus covering the full breadth of a **broad clinical pathologist role** — chemistry/toxicology/immunology, hematology/coagulation, point-of-care testing, flow cytometry, blood banking/apheresis, molecular, microbiology, and **clinical informatics** — with special weight on the two areas this role names explicitly: **core laboratory management** and **informatics**, plus **multi-hospital integration** in a growing health system.
