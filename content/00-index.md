@@ -37,3 +37,9 @@ Each important subtopic follows a full teaching template (plain + advanced expla
 - [10 · Glossary](10-glossary.md)
 - [11 · Self-Test Prompts](11-self-test-prompts.md)
 - [12 · Metadata & Tagging Schema](12-metadata-tagging-schema.md)
+
+## Enrichment Layer (deeper examples, sharper answers, cram)
+A supplemental layer that goes deeper on every chapter — more worked examples across all CP domains, dialogue-level management realism, sharpened conversational interview answers, a say-this/not-that language library, a plain-English master, and an upgraded cram sheet. The base chapters above remain the primary read.
+
+- **[→ Enrichment Layer Index](enrichment/00-enrichment-index.md)** — full map of the enrichment packs.
+- Highlights: [Core Lab Management enrichment](enrichment/04e-core-lab-management-enrichment.md) · [Multi-Hospital Integration enrichment](enrichment/04j-integration-enrichment.md) · [Interview Sharpening](enrichment/06-interview-sharpening-part-1.md) · [Say This, Not That](enrichment/07-say-this-not-that-library.md) · [Cram Upgrade](enrichment/09-cram-upgrade.md) · [Project Bank Part 3 (new archetypes 21–30)](enrichment/05-project-bank-part-3-new-archetypes.md) · [Dashboard Spotlight](enrichment/10-dashboard-spotlight.md).

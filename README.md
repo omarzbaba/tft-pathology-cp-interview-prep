@@ -51,6 +51,14 @@ See the **[full index →](content/00-index.md)**
 | 11 | [Self-Test Prompts](content/11-self-test-prompts.md) |
 | 12 | [Metadata & Tagging Schema](content/12-metadata-tagging-schema.md) |
 
+## Enrichment layer
+
+On top of the base sections above, an **enrichment layer** (`content/enrichment/`) goes deeper — more worked examples across blood bank, microbiology, coagulation, POCT, molecular, and flow; dialogue-level management realism; sharpened conversational interview answers (concise + nuanced); a **say-this / not-that** master language library; a **plain-English master**; an upgraded **cram** sheet; the project bank expanded to **30 archetypes**; and a **dashboard spotlight**. Start at the **[enrichment index →](content/enrichment/00-enrichment-index.md)**.
+
+## Project status & handoff
+
+Content curation is **complete** (44 markdown files: 25 base + 19 enrichment). The natural next phase is turning this corpus into the study **dashboard** (the `content/12-metadata-tagging-schema.md` file is written as the ingestion spec). See **[HANDOFF.md](HANDOFF.md)** for a full status, environment notes, open questions, and a ready-to-paste starter prompt for the next working session.
+
 ## A note on accuracy
 
 This is educational preparation material. It does **not** contain confidential or institution-only facts about Lahey/BILH; anything role-specific is clearly framed as a *likely priority* or *practical expectation*. It is not official guidance from any hospital, the College of American Pathologists, or any regulatory body.
